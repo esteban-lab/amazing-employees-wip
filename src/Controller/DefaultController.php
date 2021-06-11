@@ -29,10 +29,26 @@ class DefaultController extends AbstractController
         // que devuelve el contenido declarado en una plantillas de Twig.
         // https://twig.symfony.com/doc/3.x/templates.html
         
+        // symfony console
+        // es un comando equivalente a 
+        // php bin/console
         $name = 'Zacarías';
+
+        // Mostrar las rutas disonibles en mi navegador:
+        // - symfony console debug:router
+        // - symfony console debug:router default_index
+        // - symfony console router --help
+        // - symfony console router:match /        
         
         return $this->render('default/index.html.twig', [
            'nombre' => $name
         ]);
+    }
+
+    /**
+     * @Route("/hola", name="default_hola")
+     */
+    public function hola(): Response {
+        return new Response('<html><body>hola</body></html>');
     }
 }
