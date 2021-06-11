@@ -40,7 +40,6 @@ class DefaultController extends AbstractController
         // symfony console
         // es un comando equivalente a 
         // php bin/console
-        $name = 'Zacarías';
 
         // Mostrar las rutas disonibles en mi navegador:
         // - symfony console debug:router
@@ -49,7 +48,7 @@ class DefaultController extends AbstractController
         // - symfony console router:match /        
         
         return $this->render('default/index.html.twig', [
-           'nombre' => $name
+           'people' => self::PEOPLE
         ]);
     }
 
