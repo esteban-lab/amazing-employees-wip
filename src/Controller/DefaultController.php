@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Entity\Employee;
 use App\Repository\EmployeeRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -100,12 +101,13 @@ class DefaultController extends AbstractController
      *      }
      * )
      */
-    public function show(int $id, EmployeeRepository $employeeRepository): Response {
-        $data = $employeeRepository->find($id);
-
+    // La técinca ParamConverte inyecta directamente,
+    // un objeto del tipo indicado como parámetro
+    // intentando hacer un match del parámetro de la ruta
+    // con alguna de las propiedades del objeto requerido.
+    public function show(Employee $employee): Response {
         return $this->render('default/show.html.twig', [
-            'id' => $id,
-            'person' => $data
+            'person' => $employee
         ]);
     }
 
