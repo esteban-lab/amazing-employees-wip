@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Entity\Employee;
+use App\Repository\EmployeeRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -23,7 +23,7 @@ class DefaultController extends AbstractController
      * El primer parámetro de Route es la URL a la que queremos asociar la acción.
      * El segundo parámetro de Route es el nombre que queremos dar a la ruta.
      */
-    public function index(): Response
+    public function index(EmployeeRepository $employeeRepository): Response
     {
         // Una acción siempre debe devolver una respesta.
         // Por defecto deberá ser un objeto de la clase,
@@ -51,7 +51,11 @@ class DefaultController extends AbstractController
         // echo '<pre>files: '; var_dump($request->files); echo '</pre>'; // Equivalente a $_FILES, pero supervitaminado.
         // echo '<pre>idioma prefererido: '; var_dump($request->getPreferredLanguage()); echo '</pre>';
         
-        $people = $this->getDoctrine()->getRepository(Employee::class)->findAll(); // Employee::class = App\Entity\Employee
+        // Metodo 1: accediendo al rpositorio a través de AbstractController.
+        // $people = $this->getDoctrine()->getRepository(Employee::class)->findAll(); // Employee::class = App\Entity\Employee
+
+        // Metodo 2: creando un parámetro indicando el tipo (type hint).
+        $people = $employeeRepository->findAll(); // Employee::class = App\Entity\Employee
 
         return $this->render('default/index.html.twig', [
            'people' => $people
@@ -79,8 +83,8 @@ class DefaultController extends AbstractController
      * buscará la acción coincidente con la ruta indicada
      * y mostrará la información asociada.
      */
-    public function indexJson(Request $request): JsonResponse {
-        $data = $request->query->has('id') ? [] : [];
+    public function indexJson(EmployeeRepository $employeeRepository): JsonResponse {
+        $data = $employeeRepository->findAll();
 
         return $this->json($data);
     }
