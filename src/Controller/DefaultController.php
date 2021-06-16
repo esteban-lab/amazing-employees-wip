@@ -24,7 +24,7 @@ class DefaultController extends AbstractController
      * El primer parámetro de Route es la URL a la que queremos asociar la acción.
      * El segundo parámetro de Route es el nombre que queremos dar a la ruta.
      */
-    public function index(EmployeeRepository $employeeRepository): Response
+    public function index(Request $request, EmployeeRepository $employeeRepository): Response
     {
         // Una acción siempre debe devolver una respesta.
         // Por defecto deberá ser un objeto de la clase,
@@ -55,8 +55,15 @@ class DefaultController extends AbstractController
         // Metodo 1: accediendo al rpositorio a través de AbstractController.
         // $people = $this->getDoctrine()->getRepository(Employee::class)->findAll(); // Employee::class = App\Entity\Employee
 
+        $order = [];
+        
+        if($request->query->has('orderBy')) {
+            $order[$request->query->get('orderBy')] = $request->query->get('orderDir', 'ASC');
+            // $order = ['email' => 'DESC'];
+        }
+
         // Metodo 2: creando un parámetro indicando el tipo (type hint).
-        $people = $employeeRepository->findAll(); // Employee::class = App\Entity\Employee
+        $people = $employeeRepository->findBy([], $order); // Employee::class = App\Entity\Employee
 
         return $this->render('default/index.html.twig', [
            'people' => $people
@@ -105,6 +112,7 @@ class DefaultController extends AbstractController
     // un objeto del tipo indicado como parámetro
     // intentando hacer un match del parámetro de la ruta
     // con alguna de las propiedades del objeto requerido.
+    // https://symfony.com/doc/current/bundles/SensioFrameworkExtraBundle/annotations/converters.html
     public function show(Employee $employee): Response {
         return $this->render('default/show.html.twig', [
             'person' => $employee
