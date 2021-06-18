@@ -3,7 +3,9 @@
 namespace App\Controller;
 
 use App\Entity\Employee;
+use App\Repository\DepartmentRepository;
 use App\Repository\EmployeeRepository;
+use App\Service\EmployeeNormalize;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -23,15 +25,29 @@ class ApiEmployeesController extends AbstractController
      *      methods={"GET"}
      * )
      */
-    public function index(Request $request, EmployeeRepository $employeeRepository): Response
+    public function index(Request $request, EmployeeRepository $employeeRepository, EmployeeNormalize $employeeNormalize): Response
     {
         if($request->query->has('term')) {
-            $people = $employeeRepository->findByTerm($request->query->get('term'));
+            $result = $employeeRepository->findByTerm($request->query->get('term'));
 
-            return $this->json($people);
+            $data = [];
+
+            foreach($result as $employee) {
+                $data[] = $employeeNormalize->employeeNormalize($employee);   
+            }
+    
+            return $this->json($data);
         }
 
-        return $this->json($employeeRepository->findAll());
+        $result = $employeeRepository->findAll();
+
+        $data = [];
+
+        foreach($result as $employee) {
+            $data[] = $employeeNormalize->employeeNormalize($employee);   
+        }
+
+        return $this->json($data);
     }
 
     /**
@@ -44,14 +60,12 @@ class ApiEmployeesController extends AbstractController
      *      }
      * )
      */
-    public function show(int $id, EmployeeRepository $employeeRepository): Response
+    public function show(
+        Employee $employee,
+        EmployeeNormalize $employeeNormalize
+    ): Response
     {
-        $data = $employeeRepository->find($id);
-
-        dump($id);
-        dump($data);
-
-        return $this->json($data);
+        return $this->json($employeeNormalize->employeeNormalize($employee));
     }
 
     /**
@@ -61,13 +75,17 @@ class ApiEmployeesController extends AbstractController
      *      methods={"POST"}
      * )
      */
-    public function add(
+    public function add (
         Request $request,
         EntityManagerInterface $entityManager,
-        ValidatorInterface $validator
+        ValidatorInterface $validator,
+        DepartmentRepository $departmentRepository,
+        EmployeeNormalize $employeeNormalize
     ): Response {
         $data = $request->request;
 
+        $department = $departmentRepository->find($data->get('department'));
+        
         $employee = new Employee();
 
         $employee->setName($data->get('name'));
@@ -75,6 +93,7 @@ class ApiEmployeesController extends AbstractController
         $employee->setAge($data->get('age'));
         $employee->setCity($data->get('city'));
         $employee->setPhone($data->get('phone'));
+        $employee->setDepartment($department);
 
         $errors = $validator->validate($employee);
         
@@ -102,7 +121,7 @@ class ApiEmployeesController extends AbstractController
         $entityManager->flush();
 
         return $this->json(
-            $employee,
+            $employeeNormalize->employeeNormalize($employee),
             Response::HTTP_CREATED,
             [
                 'Location' => $this->generateUrl(

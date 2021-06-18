@@ -6,6 +6,7 @@ namespace App\Controller;
 
 use App\Entity\Employee;
 use App\Repository\EmployeeRepository;
+use App\Service\EmployeeNormalize;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -99,13 +100,28 @@ class DefaultController extends AbstractController
      * buscará la acción coincidente con la ruta indicada
      * y mostrará la información asociada.
      */
-    public function indexJson(Request $request, EmployeeRepository $employeeRepository): JsonResponse {
-        $data = $request->query->has('id') ? 
+    public function indexJson(
+        Request $request,
+        EmployeeRepository $employeeRepository,
+        EmployeeNormalize $employeeNormalize
+    ): JsonResponse {
+        $result = $request->query->has('id') ? 
             $employeeRepository->find($request->query->get('id')) :
             $employeeRepository->findAll();
 
+        if ($result instanceof Employee) {
+            return $this->json($employeeNormalize->employeeNormalize($result));
+        }
+
+        $data = [];
+
+        foreach ($result as $employee) {
+            array_push($data, $employeeNormalize->employeeNormalize($employee));
+        }
+
         return $this->json($data);
     }
+
 
     /**
      * @Route(
@@ -141,6 +157,29 @@ class DefaultController extends AbstractController
         return new RedirectResponse('/', Response::HTTP_TEMPORARY_REDIRECT);
     }
 
+    
+        private function normalizeEmployee (Employee $employee): ?array {
+            $projects = [];
+    
+            foreach($employee->getProjects() as $project) {
+                array_push($projects, [
+                    'id' => $project->getId(),    
+                    'name' => $project->getName(),    
+                ]);
+            }
+    
+            return [
+                'name' => $employee->getName(),
+                'email' => $employee->getEmail(),
+                'city' => $employee->getCity(),
+                'department' => [
+                    'id' => $employee->getDepartment()->getId(),
+                    'name' => $employee->getDepartment()->getName(),
+                ],
+                'projects' => $projects
+            ];
+        }
+    
     // EJERCICIO
     // Crear la el recurso para obtener una representación
     // de "UN" empleado en formato JSON.
