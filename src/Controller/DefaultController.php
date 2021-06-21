@@ -138,6 +138,9 @@ class DefaultController extends AbstractController
     // con alguna de las propiedades del objeto requerido.
     // https://symfony.com/doc/current/bundles/SensioFrameworkExtraBundle/annotations/converters.html
     public function show(Employee $employee): Response {
+        dump($this->getUser());
+        $this->isGranted('ROLE_ADMIN');
+        
         return $this->render('default/show.html.twig', [
             'person' => $employee
         ]);
